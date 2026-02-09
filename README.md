@@ -1,26 +1,36 @@
 # Kubernetes CI Image Pipeline
 
-This repository demonstrates a CI-driven workflow for building, tagging,
-publishing, and cleaning up OS images used in Kubernetes CI pipelines.
+# Kubernetes CI Image Pipeline
 
-The design is inspired by real-world CI challenges in Kubernetes projects, where OS images must be reproducible, release-aware,
-and low-maintenance for project maintainers.
+This repository demonstrates a CI-driven workflow for building, tagging, publishing,
+and cleaning up operating system images used in Kubernetes-related CI environments.
+
+The project is inspired by real-world needs in Kubespray and Kubernetes test-infra,
+where CI pipelines rely on prebuilt OS images for reproducible, deterministic testing.
+Today, many of these images are created and maintained manually, which introduces
+operational bottlenecks and unnecessary maintainer toil.
+
+This repository explores how that process can be automated in a clean, auditable,
+and release-aware way using CI pipelines.
+
 
 ---
 
 ## Structure
+```
 kubernetes-ci-image-pipeline/
 ├── .gitlab-ci.yml
 ├── ci/
-│   ├── build-images.yml        # CI job definition for building and publishing images
-│   └── cleanup-images.yml      # CI job definition for cleaning up unused images
+│   ├── build-images.yml
+│   └── cleanup-images.yml
 ├── scripts/
-│   ├── build_images.py         # Image build and tagging logic
-│   └── cleanup_registry.py     # Registry cleanup and retention policy logic
+│   ├── build_images.py
+│   └── cleanup_registry.py
 ├── config/
-│   └── images.yml              # Declarative OS image matrix used by CI
-├── Dockerfile                  # Image builder runtime environment
-├── README.md                   # Project overview and design documentation
+│   └── images.yml
+├── Dockerfile
+└── README.md
+```               
 
 
 
@@ -32,8 +42,16 @@ When these images are created manually, they become a bottleneck:
 - Cleanup is often inconsistent or risky
 - Release branches complicate image retention policies
 
-This repository demonstrates how those problems can be solved with
-automation.
+This creates several issues:
+
+- CI can be blocked when maintainers are unavailable
+- Image build processes are tribal knowledge
+- Old images accumulate without clear retention policies
+- Release branches require images that are no longer used by `main` or `master`
+
+
+
+This repository proposes a CI-native approach that removes these bottlenecks.
 
 ---
 
@@ -57,6 +75,24 @@ automation.
 
 ---
 
+Image definitions live in `config/images.yml`, not inside CI scripts.
+
+This makes the system:
+- Easier to review
+- Easier to extend
+- Less error-prone than hardcoded pipelines
+
+CI consumes configuration; it does not define it.
+
+
+CI configuration and execution logic are intentionally split:
+
+- `ci/` defines pipeline orchestration
+- `scripts/` contains the implementation logic
+
+This mirrors patterns used in Kubernetes test-infra and prevents CI files
+from becoming unreviewable monoliths.
+
 ## Image Tagging Strategy
 
 Images are published with two tags:
@@ -66,6 +102,15 @@ Images are published with two tags:
 
 This ensures reproducibility while remaining easy to consume in CI.
 
+Images are built with deterministic tagging based on:
+
+- Distribution
+- Version
+- Build metadata (e.g. commit SHA or pipeline ID)
+
+This ensures CI runs are traceable and debuggable.
+
+
 ---
 
 ## Cleanup Strategy
@@ -74,6 +119,13 @@ Cleanup runs only on scheduled pipelines and:
 - Retains images referenced by supported branches
 - Deletes images older than a defined retention window
 - Supports dry-run mode for safety
+
+---
+
+## Design Principles
+
+This project is intentionally designed around principles commonly used in
+Kubernetes and CNCF subprojects.
 
 ---
 

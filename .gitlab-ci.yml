@@ -1,0 +1,41 @@
+stages:
+  - validate
+  - build
+  - cleanup
+
+variables:
+  REGISTRY: registry.example.com/kubespray-ci
+  IMAGE_RETENTION_DAYS: "90"
+
+validate-config:
+  stage: validate
+  image: python:3.11
+  script:
+    - pip install pyyaml
+    - python ci/validate_config.py
+  rules:
+    - changes:
+        - config/images.yml
+
+build-images:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+  script:
+    - docker login -u "$REGISTRY_USER" -p "$REGISTRY_PASSWORD" $REGISTRY
+    - python ci/build-images.yml
+  rules:
+    - changes:
+        - config/images.yml
+        - ci/build-images.yml
+
+cleanup-images:
+  stage: cleanup
+  image: python:3.11
+  script:
+    - python scripts/cleanup_registry.py
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'

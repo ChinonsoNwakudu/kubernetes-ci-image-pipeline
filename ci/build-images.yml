@@ -1,0 +1,14 @@
+build-images:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+  script:
+    - docker login -u "$REGISTRY_USER" -p "$REGISTRY_PASSWORD" $REGISTRY
+    - python scripts/build_images.py
+  rules:
+    - changes:
+        - config/images.yml
+        - scripts/build_images.py

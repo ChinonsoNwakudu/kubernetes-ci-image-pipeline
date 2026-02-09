@@ -1,0 +1,13 @@
+images:
+  - distro: ubuntu
+    version: "22.04"
+    arch: amd64
+    supported_branches:
+      - master
+      - release-2.27
+
+  - distro: centos
+    version: "9-stream"
+    arch: amd64
+    supported_branches:
+      - master

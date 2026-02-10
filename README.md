@@ -1,6 +1,6 @@
 # Kubernetes CI Image Pipeline
 
-# Kubernetes CI Image Pipeline
+
 
 This repository demonstrates a CI-driven workflow for building, tagging, publishing,
 and cleaning up operating system images used in Kubernetes-related CI environments.
